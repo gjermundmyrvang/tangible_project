@@ -1,13 +1,12 @@
 import { GallerySection } from "@/components/gallery";
 import Landing from "@/components/landing";
 import { Narrative } from "@/components/narrative";
-import { Sticky } from "@/components/sticky-content";
-import { narrative } from "@/const/narrative";
-import path from "node:path";
-import fs from "node:fs";
-import { MindMapSection } from "@/components/mind-map";
-import { links, nodes } from "@/const/mind-map";
 import { MindMapResponsive } from "@/components/render-mind-map";
+import { Sticky } from "@/components/sticky-content";
+import { links, nodes } from "@/const/mind-map";
+import { narrative } from "@/const/narrative";
+import fs from "node:fs";
+import path from "node:path";
 
 function shuffleArray<T>(array: T[]) {
   const arr = [...array];
