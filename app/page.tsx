@@ -7,6 +7,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { MindMapSection } from "@/components/mind-map";
 import { links, nodes } from "@/const/mind-map";
+import { MindMapResponsive } from "@/components/render-mind-map";
 
 function shuffleArray<T>(array: T[]) {
   const arr = [...array];
@@ -42,8 +43,8 @@ export default function Home() {
   return (
     <main className="min-h-screen justify-center items-center mx-auto font-sora">
       <Landing />
-      <Sticky margin={250}>
-        <MindMapSection nodes={nodes} links={links} />
+      <Sticky margin={250} bg="bg-linear-to-b from-black  to-purple-900">
+        <MindMapResponsive nodes={nodes} links={links} />
       </Sticky>
       <Sticky
         margin={250}
