@@ -1,13 +1,12 @@
 import { GallerySection } from "@/components/gallery";
 import Landing from "@/components/landing";
 import { Narrative } from "@/components/narrative";
-import { Sticky } from "@/components/sticky-content";
-import { narrative } from "@/const/narrative";
-import path from "node:path";
-import fs from "node:fs";
-import { MindMapSection } from "@/components/mind-map";
-import { links, nodes } from "@/const/mind-map";
 import { MindMapResponsive } from "@/components/render-mind-map";
+import { Sticky } from "@/components/sticky-content";
+import { links, nodes } from "@/const/mind-map";
+import { narrative } from "@/const/narrative";
+import fs from "node:fs";
+import path from "node:path";
 
 function shuffleArray<T>(array: T[]) {
   const arr = [...array];
@@ -43,12 +42,9 @@ export default function Home() {
   return (
     <main className="min-h-screen justify-center items-center mx-auto font-sora">
       <Landing />
-      <Sticky margin={250} bg="bg-linear-to-b from-black  to-purple-900">
-        <MindMapResponsive nodes={nodes} links={links} />
-      </Sticky>
       <Sticky
         margin={250}
-        bg="bg-gradient-to-b from-purple-900 via-black to-blue-400"
+        bg="bg-gradient-to-b from-black via-purple-900 to-black"
       >
         <Narrative
           title="Narrative"
@@ -56,8 +52,29 @@ export default function Home() {
           steps={narrative}
         />
       </Sticky>
-      <Sticky margin={250} bg="bg-gradient-to-b from-blue-400 to-white">
-        <GallerySection items={items} preloadAhead={6} />;
+      <section className="relative h-screen w-full overflow-hidden">
+        <video
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        >
+          <source src="/videos/pulse.mp4" type="video/mp4" />
+        </video>
+
+        <div className="absolute inset-0 z-10 bg-black/75 backdrop-blur-xl" />
+
+        <div className="relative z-20 h-full w-full">
+          <MindMapResponsive nodes={nodes} links={links} />
+        </div>
+      </section>
+      <Sticky
+        margin={250}
+        bg="bg-gradient-to-b from-black via-pink-900 to-black"
+      >
+        <GallerySection items={items} className="pt-4" />;
       </Sticky>
     </main>
   );

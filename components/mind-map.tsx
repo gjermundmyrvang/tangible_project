@@ -59,20 +59,7 @@ export function MindMapSection({
   }, [nodes, rect.w, rect.h]);
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
-      {/* Ambient pulsing background */}
-      <div className="absolute inset-0 bg-linear-to-b from-black  to-purple-900">
-        {/* pulsing blobs (purple palette instead of white) */}
-        <div className="absolute inset-0">
-          {/* central “pulse” */}
-          <div
-            className="absolute left-1/2 top-1/2 h-[75vmax] w-[75vmax] -translate-x-1/2 -translate-y-1/2 rounded-full
-      bg-[radial-gradient(circle,rgba(168,85,247,0.22),rgba(236,72,153,0.10),transparent_60%)]
-      blur-3xl animate-pulse"
-          />
-        </div>
-      </div>
-
+    <section className="h-screen w-full overflow-hidden">
       {/* Foreground content */}
       <div className="relative h-full w-full">
         {/* Header */}
@@ -100,8 +87,8 @@ export function MindMapSection({
           <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
             <defs>
               <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.18)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.06)" />
+                <stop offset="0%" stopColor="rgba(236,72,153,0.58)" />
+                <stop offset="100%" stopColor="rgba(168,85,247,0.66)" />
               </linearGradient>
             </defs>
 

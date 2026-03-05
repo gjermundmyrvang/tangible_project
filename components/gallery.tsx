@@ -1,9 +1,11 @@
 "use client";
 
-import * as React from "react";
+import { useMediaQuery } from "@/utils/useMediaQuery";
+import clsx from "clsx";
 import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { useEffect, useState } from "react";
+import GalleryMobile from "./gallery-mobile";
+import { GallerySlider } from "./gallery-slider";
 
 type Item = {
   src: string;
@@ -11,247 +13,309 @@ type Item = {
   caption?: string;
 };
 
-function mod(n: number, m: number) {
-  return ((n % m) + m) % m;
-}
-
-function usePrefersReducedMotionSafe() {
-  const rm = useReducedMotion();
-  return !!rm;
-}
-
 export function GallerySection({
   items,
-  autoPlayMs = 4500,
-  preloadAhead = 2,
   className = "",
 }: {
   items: Item[];
-  autoPlayMs?: number;
-  preloadAhead?: number;
   className?: string;
 }) {
-  const reducedMotion = usePrefersReducedMotionSafe();
-  const [index, setIndex] = React.useState(0);
-  const [dir, setDir] = React.useState<1 | -1>(1);
-  const [isPaused, setPaused] = React.useState(false);
+  const [display, setDisplay] = useState<"grid" | "carousel">("grid");
 
-  const total = items.length;
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
-  const go = React.useCallback(
-    (next: number, direction: 1 | -1) => {
-      if (!total) return;
-      setDir(direction);
-      setIndex(mod(next, total));
-    },
-    [total],
-  );
-
-  const next = React.useCallback(() => go(index + 1, 1), [go, index]);
-  const prev = React.useCallback(() => go(index - 1, -1), [go, index]);
-
-  // Autoplay (pauses on hover/focus + when user interacts)
-  React.useEffect(() => {
-    if (isPaused || total <= 1) return;
-    const t = window.setInterval(() => next(), autoPlayMs);
-    return () => window.clearInterval(t);
-  }, [isPaused, total, next, autoPlayMs]);
-
-  // Keyboard support
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") {
-        setPaused(true);
-        next();
-      }
-      if (e.key === "ArrowLeft") {
-        setPaused(true);
-        prev();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev]);
-
-  // Preload next images (don’t spam network)
-  React.useEffect(() => {
-    if (total <= 1) return;
-    const head = preloadAhead;
-    for (let k = 1; k <= head; k++) {
-      const it = items[mod(index + k, total)];
-      if (!it?.src) continue;
-      const img = new window.Image();
-      img.decoding = "async";
-      img.loading = "eager";
-      img.src = it.src;
-    }
-  }, [index, items, total, preloadAhead]);
-
-  // Swipe on mobile
-  const startX = React.useRef<number | null>(null);
-
-  const active = items[index];
+  const handleChangeDisplay = () =>
+    display === "grid" ? setDisplay("carousel") : setDisplay("grid");
 
   return (
-    <section className={`min-h-screen flex items-center ${className}`}>
-      <div className="mx-auto w-full max-w-6xl px-4">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-5xl font-semibold tracking-tight">Process</h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-              Voluptatibus incidunt.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPaused((p) => !p)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white/6 border-white/10"
-              aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
-            >
-              {isPaused ? (
-                <Play className="h-4 w-4" />
-              ) : (
-                <Pause className="h-4 w-4" />
-              )}
-            </button>
-            <div className="text-sm text-neutral-500">
-              {String(index + 1).padStart(2, "0")} /{" "}
-              {String(total).padStart(2, "0")}
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="relative overflow-hidden rounded-4xl bg-white/10 shadow-sm"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocus={() => setPaused(true)}
-          onBlur={() => setPaused(false)}
-          onPointerDown={(e) => {
-            startX.current = e.clientX;
-          }}
-          onPointerUp={(e) => {
-            const sx = startX.current;
-            startX.current = null;
-            if (sx == null) return;
-            const dx = e.clientX - sx;
-            if (Math.abs(dx) < 40) return;
-            setPaused(true);
-            if (dx < 0) next();
-            else prev();
-          }}
-          role="region"
-          aria-label="Image gallery"
-        >
-          {/* big frame height */}
-          <div className="relative aspect-video w-full md:aspect-16/8">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={active?.src ?? index}
-                initial={
-                  reducedMotion
-                    ? { opacity: 0 }
-                    : { opacity: 0, x: dir === 1 ? 24 : -24, scale: 0.995 }
-                }
-                animate={
-                  reducedMotion
-                    ? { opacity: 1 }
-                    : { opacity: 1, x: 0, scale: 1 }
-                }
-                exit={
-                  reducedMotion
-                    ? { opacity: 0 }
-                    : { opacity: 0, x: dir === 1 ? -24 : 24, scale: 0.995 }
-                }
-                transition={{ duration: 0.28, ease: "easeOut" }}
-                className="absolute inset-0"
-              >
-                {active ? (
-                  <Image
-                    src={active.src}
-                    alt={active.alt}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 1100px"
-                    priority={index === 0}
-                  />
-                ) : null}
-
-                <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 via-black/15 to-transparent" />
-                <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-6">
-                  <div className="max-w-3xl text-base font-medium text-white drop-shadow">
-                    {active?.caption ?? " "}
-                  </div>
-                  <div className="mt-3 text-sm text-white/80">
-                    Swipe, click arrows, or press ← →
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="absolute inset-y-0 left-4 flex items-center">
-              <button
-                onClick={() => {
-                  setPaused(true);
-                  prev();
-                }}
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/15"
-                aria-label="Previous image"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="absolute inset-y-0 right-4 flex items-center">
-              <button
-                onClick={() => {
-                  setPaused(true);
-                  next();
-                }}
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/15"
-                aria-label="Next image"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur py-2">
-            <div className="flex gap-2 overflow-x-auto p-3">
-              {items.map((it, i) => (
-                <button
-                  key={it.src + i}
-                  onClick={() => {
-                    setPaused(true);
-                    setDir(i > index ? 1 : -1);
-                    setIndex(i);
-                  }}
-                  className={[
-                    "relative h-16 w-28 flex-none overflow-hidden rounded-xl border",
-                    i === index
-                      ? "border-neutral-900"
-                      : "border-neutral-200 hover:border-neutral-400",
-                  ].join(" ")}
-                  aria-label={`Go to image ${i + 1}`}
-                >
-                  <Image
-                    src={it.src}
-                    alt={it.alt}
-                    fill
-                    className="object-cover"
-                    sizes="112px"
-                    // thumbnails are tiny; let them lazy load
-                  />
-                  {i === index ? (
-                    <div className="absolute inset-0 ring-2 ring-neutral-900" />
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+    <section className={`min-h-screen flex ${className}`}>
+      <div className="mx-auto w-full max-w-7xl">
+        <h2 className="px-5 text-4xl font-bold text-white">Gallery</h2>
+        {isMobile ? (
+          <GalleryMobile items={items} />
+        ) : (
+          <RenderGalleryLaptop
+            items={items}
+            display={display}
+            onPress={handleChangeDisplay}
+          />
+        )}
       </div>
     </section>
+  );
+}
+
+const RenderGalleryLaptop = ({
+  items,
+  display,
+  onPress,
+}: {
+  items: Item[];
+  display: "grid" | "carousel";
+  onPress: () => void;
+}) => {
+  if (display === "grid")
+    return <GalleryGrid items={items} display={display} onPress={onPress} />;
+
+  return <GallerySlider items={items} />;
+};
+
+const DisplayButtons = ({
+  display = "grid",
+  onPress,
+}: {
+  display: string;
+  onPress: () => void;
+}) => {
+  return (
+    <div className="flex items-center gap-4 text-white">
+      <button
+        className={clsx(
+          "px-4 py-2",
+          display === "grid"
+            ? "border-2 border-pink-500"
+            : "border border-gray-200",
+        )}
+        onClick={onPress}
+        style={{
+          cursor: "pointer",
+        }}
+      >
+        Grid
+      </button>
+      <button
+        className={clsx(
+          "px-4 py-2",
+          display === "carousel"
+            ? "border-2 border-pink-500"
+            : "border border-gray-200",
+        )}
+        onClick={onPress}
+        style={{
+          cursor: "pointer",
+        }}
+      >
+        Carousel
+      </button>
+    </div>
+  );
+};
+
+function tileClass(i: number) {
+  const p = i % 15;
+
+  let colSpan = "col-span-1";
+  let rowSpan = "row-span-1";
+
+  if (p === 0) {
+    colSpan = "md:col-span-2";
+    rowSpan = "md:row-span-2";
+  } else if (p === 3 || p === 8 || p === 12) {
+    colSpan = "md:col-span-2";
+  } else if (p === 6) {
+    rowSpan = "md:row-span-2";
+  }
+
+  return clsx(colSpan, rowSpan);
+}
+
+export function GalleryGrid({
+  items,
+  display,
+  onPress,
+}: {
+  items: Item[];
+  display: "grid" | "carousel";
+  onPress: () => void;
+}) {
+  const PAGE_SIZE = 10;
+  const [visible, setVisible] = useState(PAGE_SIZE);
+
+  const shown = items.slice(0, visible);
+  const canLoadMore = visible < items.length;
+
+  // lightbox state (index is relative to "shown")
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const close = () => setOpenIndex(null);
+  const prev = () =>
+    setOpenIndex((i) => (i === null ? null : Math.max(0, i - 1)));
+  const next = () =>
+    setOpenIndex((i) =>
+      i === null ? null : Math.min(shown.length - 1, i + 1),
+    );
+
+  // keyboard
+  useEffect(() => {
+    if (openIndex === null) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openIndex, shown.length]);
+
+  // lock scroll while open
+  useEffect(() => {
+    if (openIndex === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [openIndex]);
+
+  return (
+    <div className="mt-4 px-4">
+      <DisplayButtons display={display} onPress={onPress} />
+
+      <div
+        className={clsx(
+          "grid gap-4 mt-4",
+          "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+          "md:auto-rows-[180px]",
+        )}
+      >
+        {shown.map((img, i) => (
+          <button
+            key={`${img.alt}-${i}`}
+            type="button"
+            onClick={() => setOpenIndex(i)}
+            className={clsx(
+              "group relative overflow-hidden shadow-sm text-left",
+              "transition-transform duration-200 hover:-translate-y-0.5",
+              "focus:outline-none focus:ring-2 focus:ring-white/40",
+              tileClass(i),
+            )}
+            aria-label={`Open image: ${img.alt}`}
+            style={{ cursor: "pointer" }}
+          >
+            <Image
+              src={img.src}
+              alt={img.alt}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              placeholder="empty"
+              priority={i < 4}
+            />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/35 via-black/0 to-black/0 opacity-60" />
+          </button>
+        ))}
+      </div>
+
+      {canLoadMore ? (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() =>
+              setVisible((v) => Math.min(v + PAGE_SIZE, items.length))
+            }
+            className="rounded-full border border-white/15 bg-white/50 px-5 py-2.5 text-sm text-black backdrop-blur transition hover:bg-white/80"
+            style={{ cursor: "pointer" }}
+          >
+            Load more
+          </button>
+        </div>
+      ) : null}
+
+      {openIndex !== null ? (
+        <Lightbox
+          items={shown}
+          index={openIndex}
+          onClose={close}
+          onPrev={prev}
+          onNext={next}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function Lightbox({
+  items,
+  index,
+  onClose,
+  onPrev,
+  onNext,
+}: {
+  items: Item[];
+  index: number;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const img = items[index];
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* backdrop */}
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        onClick={onClose}
+        aria-label="Close"
+      />
+
+      {/* top bar */}
+      <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-4 py-4">
+        <div className="text-xs text-white/70">
+          {index + 1} / {items.length}
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur hover:bg-white/15"
+        >
+          Close
+        </button>
+      </div>
+
+      {/* image */}
+      <div className="absolute inset-0 flex items-center justify-center px-4">
+        <div className="relative h-[78vh] w-full max-w-[96vw] overflow-hidden">
+          <Image
+            src={img.src}
+            alt={img.alt}
+            fill
+            sizes="100vw"
+            className="object-contain"
+            priority
+          />
+        </div>
+      </div>
+
+      {/* nav */}
+      <div className="absolute left-0 right-0 bottom-6 z-10 flex items-center justify-center gap-3 px-4">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={index === 0}
+          className={clsx(
+            "rounded-full border border-white/15 bg-white/10 px-5 py-2 text-sm text-white/90 backdrop-blur transition",
+            index === 0 ? "opacity-40" : "hover:bg-white/15",
+          )}
+        >
+          Prev
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={index === items.length - 1}
+          className={clsx(
+            "rounded-full border border-white/15 bg-white/10 px-5 py-2 text-sm text-white/90 backdrop-blur transition",
+            index === items.length - 1 ? "opacity-40" : "hover:bg-white/15",
+          )}
+        >
+          Next
+        </button>
+      </div>
+    </div>
   );
 }
