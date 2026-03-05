@@ -73,9 +73,6 @@ export function MindMapTreeMobile({
         <h2 className="text-3xl font-semibold tracking-tight text-white">
           {title}
         </h2>
-        <p className="mt-2 text-sm text-white/70">
-          Tap to expand/collapse. This is the same map, just mobile-friendly.
-        </p>
         <div className="mt-4">
           <TreeItem
             node={tree}

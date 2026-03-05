@@ -7,7 +7,6 @@ export default function Landing() {
       id="landing"
       className="relative flex h-screen items-center justify-center overflow-hidden"
     >
-      {/* Background video */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
         autoPlay
@@ -18,10 +17,8 @@ export default function Landing() {
         <source src="/videos/disturbia.mp4" type="video/mp4" />
       </video>
 
-      {/* Blur / dark overlay */}
       <div className="absolute inset-0 backdrop-blur-md bg-black/40" />
 
-      {/* Content */}
       <div className="relative text-center px-6 text-white">
         <h1 className="animate-float bg-linear-to-b from-pink-200 to-pink-600 bg-clip-text text-[clamp(4rem,10vw,9rem)] font-extrabold leading-[0.9] tracking-tight text-transparent uppercase">
           DISTURBIA
