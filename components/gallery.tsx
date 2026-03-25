@@ -57,7 +57,12 @@ const RenderGalleryLaptop = ({
   if (display === "grid")
     return <GalleryGrid items={items} display={display} onPress={onPress} />;
 
-  return <GallerySlider items={items} />;
+  return (
+    <div className="mt-4 px-4">
+      <DisplayButtons display={display} onPress={onPress} />
+      <GallerySlider items={items} />
+    </div>
+  );
 };
 
 const DisplayButtons = ({
