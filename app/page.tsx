@@ -48,7 +48,7 @@ export default function Home() {
       >
         <Narrative
           title="Narrative"
-          description="The exhibition bla bla bla"
+          description="Disturbia explores how a pulse create a sense of stability, while always containing the possibility of being interrupted. Step into a space where something is already in motion. See the perception change the moment you intervene. Visitors are invited to experience the transition between harmony and disturbance thorugh direct physcial interaction"
           steps={narrative}
         />
       </Sticky>
